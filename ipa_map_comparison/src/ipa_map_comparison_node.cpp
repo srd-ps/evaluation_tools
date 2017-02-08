@@ -45,6 +45,7 @@ ipa_map_comparison_node::ipa_map_comparison_node()
 }
 void ipa_map_comparison_node::compareMaps()
 {
+  ros::NodeHandle nh;
   int factor = map_.info.resolution / ground_truth_map_.info.resolution;
   int width_offset = 0, height_offset = 0, width_left_offset = 0, width_right_offset = 0, height_top_offset = 0,
       height_bottom_offset = 0, occ_count = 0, free_count = 0;
@@ -62,7 +63,7 @@ void ipa_map_comparison_node::compareMaps()
     }
 
   }
-  if (factor * map_.info.width > ground_truth_map_.info.width)
+  if (factor * map_.info.height > ground_truth_map_.info.height)
   {
     height_offset = factor * map_.info.height - ground_truth_map_.info.height;
     if (height_offset / 2.0 == std::floor((width_offset / 2.0 )))
@@ -73,65 +74,126 @@ void ipa_map_comparison_node::compareMaps()
       height_bottom_offset = std::floor(height_offset / 2.0);
     }
   }
-  double free_score = 0, occ_score = 0;
+  ROS_ERROR_STREAM("w_offset: "<<width_offset<<" h_offset: "<<height_offset );
+  double free_score = 0, occ_score = 0, false_free = 0, false_occ = 0;
   std::vector<std::vector<int> > ground_truth_2d_map, map_2d;
+  ground_truth_2d_map.resize(ground_truth_map_.info.height + height_offset);
+  for (int j = 0; j < ground_truth_map_.info.height + height_offset; j++)
+    ground_truth_2d_map[j].resize(ground_truth_map_.info.width + width_offset);
   for (int i = 0; i < ground_truth_map_.info.height + height_offset; i++)
   {
-    std::vector<int> temp;
-    if (i < height_top_offset || i >= ground_truth_map_.info.height)
-      temp = std::vector<int>(ground_truth_map_.info.width + width_offset, -2);
-    else
+    for (int j = 0; j < ground_truth_map_.info.width + width_offset; j++)
     {
-      for (int j = 0; j < ground_truth_map_.info.width + width_offset; j++)
+      if /*(i < height_offset)*/(i >= ground_truth_map_.info.height)
       {
-        if (j < width_left_offset || j >= ground_truth_map_.info.width)
-          temp.push_back(-2);
-        else
-        {
-          temp.push_back(ground_truth_map_.data[i*ground_truth_map_.info.width + j]);
-          if (ground_truth_map_.data[i*ground_truth_map_.info.width + j] == 100)
-            occ_count++;
-          else if (ground_truth_map_.data[i*ground_truth_map_.info.width + j] == 0)
-            free_count++;
-        }
+        ground_truth_2d_map[i][j] = -1;
+        //temp = std::vector<int>(ground_truth_map_.info.width + width_offset, -1);
+      }
+      else if (j >= ground_truth_map_.info.width)
+        ground_truth_2d_map[i][j] = -1;
+      else
+      {
+        ground_truth_2d_map[i][j] = (ground_truth_map_.data[(i)*ground_truth_map_.info.width + j]);
+        if (ground_truth_2d_map[i][j] < -1 || ground_truth_2d_map[i][j] > 100)
+          ground_truth_2d_map[i][j]=-1;
+          //ROS_ERROR_STREAM("ground_truth_2d_map[i][j]: "<<static_cast<int>((ground_truth_map_.data[(i)*ground_truth_map_.info.width + j]))<<" i "<<i<<" j "<<j);
+        if (ground_truth_map_.data[(i)*ground_truth_map_.info.width + j] >= 50)
+          occ_count++;
+        else if (ground_truth_map_.data[(i)*ground_truth_map_.info.width + j] >= 0
+                 && ground_truth_map_.data[(i)*ground_truth_map_.info.width + j] < 50)
+          free_count++;
       }
     }
-    ground_truth_2d_map.push_back(temp);
   }
-
-  for (int i = 0; i < map_.info.height; i++)
+  for (int i = 0; i < ground_truth_map_.info.height + height_offset; i++)
   {
-    std::vector<int> temp;
-    for (int j = 0; j < map_.info.width; j++)
+    for (int j = 0; j < ground_truth_map_.info.width + width_offset; j++)
     {
-      temp.push_back(map_.data[i*ground_truth_map_.info.width + j]);
+//      if (ground_truth_2d_map[i][j] < -1 || ground_truth_2d_map[i][j] > 100)
+//        ROS_ERROR_STREAM("ground_truth_2d_map[i][j]: "<<ground_truth_2d_map[i][j]<<" i "<<i<<" j "<<j);
     }
-    map_2d.push_back(temp);
   }
-
-  for (int i = 0; i < map_2d.size(); i++)
-    for (int j = 0; j < map_2d[j].size(); j++)
+  ROS_ERROR_STREAM(map_.info.height);
+  map_2d.resize(ground_truth_map_.info.height + height_offset);
+  for (int j = 0; j < ground_truth_map_.info.height + height_offset; j++)
+    map_2d[j].resize(ground_truth_map_.info.width + width_offset);
+  ROS_ERROR_STREAM("height: "<<map_2d.size()<< "width:"<<map_2d[0].size());
+  for (int i = 0; i < (map_.info.height); i++)
+  {
+    for (int j = 0; j < (map_.info.width); j++)
     {
-      int map_occ_value = map_2d[i][j];
       for (int inner_i = 0; inner_i < factor; inner_i++)
         for (int inner_j = 0; inner_j < factor; inner_j++)
-        {
-          int ground_truth_value = ground_truth_2d_map[i* factor + inner_i][j* factor + inner_j];
-          if (map_occ_value == ground_truth_value)
-          {
-            if (map_occ_value == 100)
-              occ_score ++;
-            else if(map_occ_value == 0)
-              free_score ++;
-          }
+      {
+            map_2d[inner_i + i*factor][inner_j + j*factor]=map_.data[i*map_.info.width + j];
+            //ROS_ERROR_STREAM("x: "<<i + inner_i<< " y: "<<j+ inner_j);
+      }
+    }
+  }
+  ROS_ERROR_STREAM("2d map  finished");
 
-        }
+  map_2d_msg_.info.height = map_2d.size();
+  map_2d_msg_.info.width = map_2d[0].size();
+  map_2d_msg_.info.resolution = ground_truth_map_.info.resolution;
+  map_2d_msg_.info.origin = ground_truth_map_.info.origin;
+  std::vector<int8_t> map_data((ground_truth_map_.info.width + width_offset) * (ground_truth_map_.info.height + height_offset), -1);
+  for (uint y = 0; y < (ground_truth_map_.info.height + height_offset); y++)
+    for (uint x = 0; x < (ground_truth_map_.info.width + width_offset); x++)
+    {
+        map_data.at(y * (ground_truth_map_.info.width + width_offset) + x) = map_2d[y][x];
+    }
+
+  map_2d_msg_.data = map_data;
+  pub = nh.advertise<nav_msgs::OccupancyGrid>("map_measured", 1);
+  pub.publish(map_2d_msg_);
+  ref_2d_msg_.info.height = ground_truth_map_.info.height + height_offset;
+  ref_2d_msg_.info.width = ground_truth_map_.info.width + width_offset;
+  ref_2d_msg_.info.resolution = ground_truth_map_.info.resolution;
+  ref_2d_msg_.info.origin = ground_truth_map_.info.origin;
+  std::vector<int8_t> map_data2((ground_truth_map_.info.width + width_offset) * (ground_truth_map_.info.height + height_offset), -1);
+  for (uint y = 0; y < (ground_truth_map_.info.height + height_offset); y++)
+    for (uint x = 0; x < (ground_truth_map_.info.width + width_offset); x++)
+    {
+        map_data2.at(y * (ground_truth_map_.info.width + width_offset) + x) = ground_truth_2d_map[y][x];
+    }
+
+  ref_2d_msg_.data = map_data2;
+  pub2 = nh.advertise<nav_msgs::OccupancyGrid>("map_ref", 1);
+  pub2.publish(ref_2d_msg_);
+
+  //ROS_ERROR_STREAM("height: "<<height_offset<<" width: "<<width_offset);
+  for (int i = 0; i < (ground_truth_map_.info.height + height_offset); i++)
+    for (int j = 0; j < (ground_truth_map_.info.width + width_offset); j++)
+    {
+      int map_occ_value = map_2d[i][j];
+      int ground_truth_value = ground_truth_2d_map[i][j];
+      if (map_occ_value == ground_truth_value)
+      {
+        if (map_occ_value >= 50)
+          occ_score ++;
+        else if(map_occ_value >= 0 && map_occ_value < 50)
+          free_score ++;
+      }
+      else
+      {
+        if (map_occ_value >= 50)
+          false_occ++;
+        else if (map_occ_value >= 0 && map_occ_value < 50)
+          false_free++;
+      }
 
     }
   free_score /= free_count;
   occ_score /= occ_count;
-  ROS_ERROR_STREAM("occ_score: "<<occ_score<< " free_score: "<<free_score);
+  false_occ /= ground_truth_map_.info.height* ground_truth_map_.info.width;
+  false_free /= ground_truth_map_.info.height* ground_truth_map_.info.width;
+  ROS_ERROR_STREAM("occ_score: "<<occ_score<< " free_score: "<<free_score<< " false_occ: "<<false_occ<<" false_free: "<<false_free);
 
+}
+void ipa_map_comparison_node::publish()
+{
+  pub.publish(map_2d_msg_);
+  pub2.publish(ref_2d_msg_);
 }
 
 int main(int argc, char *argv[])
@@ -143,7 +205,12 @@ int main(int argc, char *argv[])
   while (ros::Time::now().sec == 0)
   {
   }
+  ros::Duration(3).sleep();
   ipa_map_comparison_node comp_node = ipa_map_comparison_node();
-  ros::spinOnce();
+  while (ros::ok())
+  {
+    comp_node.publish();
+    ros::spinOnce();
+  }
   return 0;
 }

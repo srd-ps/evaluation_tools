@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <launch>
-  <arg name="map_file" default="$(find cob_default_env_config)/ipa-production-plant/map.yaml"/>
+  <arg name="map_file" default="$(find ipa_map_comparison)/maps/map_full.yaml"/>
 
   <!-- Run the map server -->
     <node name="map_server_ground_truth" pkg="map_server" type="map_server" args="$(arg map_file)" >
@@ -9,7 +9,7 @@
     </node>
 
     <!-- Run the map server -->
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find cob_default_env_config)/ipa-production-plant/map_boxes.yaml" >
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find ipa_map_comparison)/maps/map_standard_5cm.yaml" >
     <remap from="static_map" to="map"/>
     </node>
 
