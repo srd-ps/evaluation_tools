@@ -176,17 +176,20 @@ void ipa_map_comparison_node::compareMaps()
       }
       else
       {
-        if (map_occ_value >= 50)
-          false_occ++;
-        else if (map_occ_value >= 0 && map_occ_value < 50)
-          false_free++;
+        if (ground_truth_value != -1 && map_occ_value != -1)
+        {
+          if (map_occ_value >= 50)
+            false_occ++;
+          else if (map_occ_value >= 0 && map_occ_value < 50)
+            false_free++;
+        }
       }
 
     }
   free_score /= free_count;
   occ_score /= occ_count;
-  false_occ /= ground_truth_map_.info.height* ground_truth_map_.info.width;
-  false_free /= ground_truth_map_.info.height* ground_truth_map_.info.width;
+  false_occ /= free_count;
+  false_free /= occ_count;
   ROS_ERROR_STREAM("occ_score: "<<occ_score<< " free_score: "<<free_score<< " false_occ: "<<false_occ<<" false_free: "<<false_free);
 
 }
