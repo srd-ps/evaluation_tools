@@ -48,7 +48,8 @@ void ipa_map_comparison_node::compareMaps()
   ros::NodeHandle nh;
   int factor = map_.info.resolution / ground_truth_map_.info.resolution;
   int width_offset = 0, height_offset = 0, width_left_offset = 0, width_right_offset = 0, height_top_offset = 0,
-      height_bottom_offset = 0, occ_count = 0, free_count = 0;
+      height_bottom_offset = 0;
+  float occ_count = 0, free_count = 0;
   //check the size of the maps, if they fit into each other without overlapping if overlapping correct size
   //necessary for the sliding window comparison later on
   if (factor * map_.info.width > ground_truth_map_.info.width)
@@ -176,6 +177,14 @@ void ipa_map_comparison_node::compareMaps()
       }
       else
       {
+        if (map_occ_value == ground_truth_2d_map[i + 1][j] || map_occ_value == ground_truth_2d_map[i -1][j] ||
+            map_occ_value == ground_truth_2d_map[i][j - 1] || map_occ_value == ground_truth_2d_map[i][j + 1])
+        {
+          if (map_occ_value >= 50)
+            occ_score += 0.5;
+          else if(map_occ_value >= 0 && map_occ_value < 50)
+            free_score += 0.5;
+        }
         if (ground_truth_value != -1 && map_occ_value != -1)
         {
           if (map_occ_value >= 50)
