@@ -2,10 +2,18 @@
 
 ipa_map_comparison_node::ipa_map_comparison_node()
 {
+  map_eval_started_ = false;
   ros::NodeHandle nh;
   ros::ServiceClient map_client = nh.serviceClient<nav_msgs::GetMap>("/static_map");
+  start_map_eval_service_ = nh.advertiseService("startMapEval",&ipa_map_comparison_node::startMapEval,this);
   nav_msgs::GetMap srv;
 
+  while (!map_eval_started_)
+  {
+    ros::Duration sleep_time(0.5);
+    sleep_time.sleep();
+    ros::spinOnce();
+  }
   while (!map_client.call(srv))
   {
     ros::Duration call_delay(0.5);
@@ -43,6 +51,17 @@ ipa_map_comparison_node::ipa_map_comparison_node()
     return;
   }
 }
+
+bool ipa_map_comparison_node::startMapEval(ipa_map_comparison::StartMapEval::Request &req, ipa_map_comparison::StartMapEval::Response &res)
+{
+  number_of_neighbours_ = req.number_of_neighbours;
+  eval_file_name_ = req.eval_file_name;
+  neighbourhood_score_ = req.neighbourhood_score;
+  map_eval_started_ = true;
+  res.success = true;
+  return true;
+}
+
 void ipa_map_comparison_node::compareMaps()
 {
   ros::NodeHandle nh;
@@ -177,20 +196,43 @@ void ipa_map_comparison_node::compareMaps()
       }
       else
       {
-        if (map_occ_value == ground_truth_2d_map[i + 1][j] || map_occ_value == ground_truth_2d_map[i -1][j] ||
-            map_occ_value == ground_truth_2d_map[i][j - 1] || map_occ_value == ground_truth_2d_map[i][j + 1])
+        if (number_of_neighbours_ == 4)
         {
-          if (map_occ_value >= 50)
-            occ_score += 0.5;
-          else if(map_occ_value >= 0 && map_occ_value < 50)
-            free_score += 0.5;
+          if (map_occ_value == ground_truth_2d_map[i + 1][j] || map_occ_value == ground_truth_2d_map[i -1][j] ||
+              map_occ_value == ground_truth_2d_map[i][j - 1] || map_occ_value == ground_truth_2d_map[i][j + 1])
+          {
+            if (map_occ_value >= 50)
+              occ_score += neighbourhood_score_;
+            else if(map_occ_value >= 0 && map_occ_value < 50)
+              free_score += neighbourhood_score_;
+          }
+          if (ground_truth_value != -1 && map_occ_value != -1)
+          {
+            if (map_occ_value >= 50)
+              false_occ++;
+            else if (map_occ_value >= 0 && map_occ_value < 50)
+              false_free++;
+          }
         }
-        if (ground_truth_value != -1 && map_occ_value != -1)
+        else if(number_of_neighbours_ == 8)
         {
-          if (map_occ_value >= 50)
-            false_occ++;
-          else if (map_occ_value >= 0 && map_occ_value < 50)
-            false_free++;
+          if (map_occ_value == ground_truth_2d_map[i + 1][j] || map_occ_value == ground_truth_2d_map[i -1][j] ||
+              map_occ_value == ground_truth_2d_map[i][j - 1] || map_occ_value == ground_truth_2d_map[i][j + 1] ||
+              map_occ_value == ground_truth_2d_map[i - 1][j - 1] || map_occ_value == ground_truth_2d_map[i + 1][j - 1] ||
+              map_occ_value == ground_truth_2d_map[i - 1][j + 1] || map_occ_value == ground_truth_2d_map[i + 1][j + 1])
+          {
+            if (map_occ_value >= 50)
+              occ_score += neighbourhood_score_;
+            else if(map_occ_value >= 0 && map_occ_value < 50)
+              free_score += neighbourhood_score_;
+          }
+          if (ground_truth_value != -1 && map_occ_value != -1)
+          {
+            if (map_occ_value >= 50)
+              false_occ++;
+            else if (map_occ_value >= 0 && map_occ_value < 50)
+              false_free++;
+          }
         }
       }
 
@@ -200,7 +242,16 @@ void ipa_map_comparison_node::compareMaps()
   false_occ /= free_count;
   false_free /= occ_count;
   ROS_ERROR_STREAM("occ_score: "<<occ_score<< " free_score: "<<free_score<< " false_occ: "<<false_occ<<" false_free: "<<false_free);
-
+  std::ofstream log;
+  std::string path = ros::package::getPath("ipa_map_comparison");
+  path += "/eval/" + eval_file_name_;
+  ROS_INFO_STREAM(path);
+  log.open(path.c_str(), std::ofstream::out | std::ofstream::app);
+  log<<"occ_score: "<<occ_score<<std::endl;
+  log<<"free_score: "<<free_score<<std::endl;
+  log<<"false_occ: "<<false_occ<<std::endl;
+  log<<"false_free: "<<false_free<<std::endl;
+  log.close();
 }
 void ipa_map_comparison_node::publish()
 {
