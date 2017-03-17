@@ -10,10 +10,12 @@ ipa_map_comparison_node::ipa_map_comparison_node()
 
   while (!map_eval_started_)
   {
+    ROS_ERROR_STREAM("wait for eval");
     ros::Duration sleep_time(0.5);
     sleep_time.sleep();
     ros::spinOnce();
   }
+  ROS_ERROR_STREAM("started eval");
   while (!map_client.call(srv))
   {
     ros::Duration call_delay(0.5);
@@ -198,13 +200,11 @@ void ipa_map_comparison_node::compareMaps()
       {
         if (number_of_neighbours_ == 4)
         {
-          if (map_occ_value == ground_truth_2d_map[i + 1][j] || map_occ_value == ground_truth_2d_map[i -1][j] ||
-              map_occ_value == ground_truth_2d_map[i][j - 1] || map_occ_value == ground_truth_2d_map[i][j + 1])
+          if (ground_truth_value == map_2d[i + 1][j] || ground_truth_value == map_2d[i -1][j] ||
+              ground_truth_value == map_2d[i][j - 1] || ground_truth_value == map_2d[i][j + 1])
           {
-            if (map_occ_value >= 50)
+            if (ground_truth_value >= 50)
               occ_score += neighbourhood_score_;
-            else if(map_occ_value >= 0 && map_occ_value < 50)
-              free_score += neighbourhood_score_;
           }
           if (ground_truth_value != -1 && map_occ_value != -1)
           {
@@ -216,15 +216,13 @@ void ipa_map_comparison_node::compareMaps()
         }
         else if(number_of_neighbours_ == 8)
         {
-          if (map_occ_value == ground_truth_2d_map[i + 1][j] || map_occ_value == ground_truth_2d_map[i -1][j] ||
-              map_occ_value == ground_truth_2d_map[i][j - 1] || map_occ_value == ground_truth_2d_map[i][j + 1] ||
-              map_occ_value == ground_truth_2d_map[i - 1][j - 1] || map_occ_value == ground_truth_2d_map[i + 1][j - 1] ||
-              map_occ_value == ground_truth_2d_map[i - 1][j + 1] || map_occ_value == ground_truth_2d_map[i + 1][j + 1])
+          if (ground_truth_value == map_2d[i + 1][j] || ground_truth_value == map_2d[i -1][j] ||
+              ground_truth_value == map_2d[i][j - 1] || ground_truth_value == map_2d[i][j + 1] ||
+              ground_truth_value == map_2d[i - 1][j - 1] || ground_truth_value == map_2d[i + 1][j - 1] ||
+              ground_truth_value == map_2d[i - 1][j + 1] || ground_truth_value == map_2d[i + 1][j + 1])
           {
-            if (map_occ_value >= 50)
+            if (ground_truth_value >= 50)
               occ_score += neighbourhood_score_;
-            else if(map_occ_value >= 0 && map_occ_value < 50)
-              free_score += neighbourhood_score_;
           }
           if (ground_truth_value != -1 && map_occ_value != -1)
           {

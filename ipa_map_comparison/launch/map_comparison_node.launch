@@ -9,7 +9,7 @@
     </node>
 
     <!-- Run the map server -->
-    <node name="map_server" pkg="map_server" type="map_server" args="$(find ipa_map_comparison)/maps/map_standard_5cm.yaml" >
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find ipa_map_comparison)/maps/map.yaml" >
     <remap from="static_map" to="map"/>
     </node>
 
