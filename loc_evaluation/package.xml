@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>loc_evaluation</name>
+  <version>0.0.0</version>
+  <description>Package with tools for localization evaluation</description>
+
+  <license>Fraunhofer IPA</license>
+
+
+  <maintainer email="srd@ipa.fhg.de">srd</maintainer>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+
+</package>
