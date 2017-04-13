@@ -14,18 +14,16 @@ class ipa_map_comparison_node
 {
 public:
   ipa_map_comparison_node();
-  nav_msgs::OccupancyGrid map_2d_msg_;
-  nav_msgs::OccupancyGrid ref_2d_msg_;
   void publish();
 private:
   nav_msgs::OccupancyGrid ground_truth_map_;
   nav_msgs::OccupancyGrid map_;
   void compareMaps();
-  bool startMapEval(ipa_map_comparison::StartMapEval::Request& req, ipa_map_comparison::StartMapEval::Response& res);
-  ros::Publisher pub;
-  ros::Publisher pub2;
-  ros::ServiceServer start_map_eval_service_;
+  ros::Publisher pub_ref_map_;
+  ros::Publisher pub_measured_map_;
   std::string eval_file_name_;
+  nav_msgs::OccupancyGrid map_2d_msg_;
+  nav_msgs::OccupancyGrid ref_2d_msg_;
   int number_of_neighbours_;
   float neighbourhood_score_;
   bool map_eval_started_;
