@@ -42,5 +42,5 @@ qtcreator-*
 CATKIN_IGNORE
 
 #eval data
-*.txt
+#*.txt
 *.pdf
