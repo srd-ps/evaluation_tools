@@ -1,7 +1,7 @@
 #ifndef MAP_COMPARISON_NODE_H
 #define MAP_COMPARISON_NODE_H
 
-//ros includes
+// ros includes
 #include <ros/ros.h>
 #include <nav_msgs/GetMap.h>
 #include <ipa_map_comparison/StartMapEval.h>
@@ -9,12 +9,12 @@
 #include <iostream>
 #include <fstream>
 
-
 class ipa_map_comparison_node
 {
 public:
   ipa_map_comparison_node();
   void publish();
+
 private:
   nav_msgs::OccupancyGrid ground_truth_map_;
   nav_msgs::OccupancyGrid map_;
@@ -27,8 +27,6 @@ private:
   int number_of_neighbours_;
   float neighbourhood_score_;
   bool map_eval_started_;
-
-
 };
 
-#endif // MAP_COMPARISON_NODE_H
+#endif  // MAP_COMPARISON_NODE_H
