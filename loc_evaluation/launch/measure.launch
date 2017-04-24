@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="name" default="test_data.txt"/>
+  <arg name="robot_id" default=""/>
+
+  <!--group ns="$(arg robot_id)"-->    
+    <node name="loc_evaluation" pkg="loc_evaluation" type="loc_evaluation" output="screen" >
+      <param name="path" type="string" value="$(find loc_evaluation)/data/$(arg name)"/>
+      <param name="count_max" type="int" value="10000"/>
+      <param name="tf_prefix" type="str" value="$(arg robot_id)" />
+    </node>
+  <!--/group-->
+
+</launch>
