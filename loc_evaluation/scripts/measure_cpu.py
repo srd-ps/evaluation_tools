@@ -4,7 +4,7 @@ import rospy
 
 import psutil
 import os
-
+import rospkg
 from optparse import OptionParser
 
 def getProcessIDs(name):
@@ -24,13 +24,14 @@ if __name__ == '__main__':
     parser = OptionParser(usage="%prog -p or --process + process name", prog=os.path.basename(sys.argv[0]))
 
     parser.add_option("-p", "--process", dest="process", default=0, help="Process name")
-
+    parser.add_option("-f", "--file", dest="file", default="cpu_mean", help="file name")
     (options, args) = parser.parse_args()
     if not isinstance(options.process, basestring):
         parser.error("Please specify a process name using -p or --process")
         sys.exit()
 
     process_ID = getProcessIDs(options.process)
+    file_name = str(options.file)
     if process_ID == 0:
         parser.error("No process named " + options.process)
     else:
@@ -49,7 +50,15 @@ if __name__ == '__main__':
         mem = mem + process.get_memory_percent()
         count = count + 1
         if (count%10 == 0):
+            rospack = rospkg.RosPack()
+            rospack.list()
+            path =rospack.get_path("loc_evaluation")
+            path = path + "/data/"
+            file = open(path + file_name + '.txt','w+')
             print "average CPU percentage is: " + str(cpu/count)
             print "average Memory percentage is: " + str(mem/count)
+            file.write("cpu_mean: "+str(cpu/count)+"\n");
+            file.write("mem_mean: "+str(mem/count));
+            file.close()
 
 
