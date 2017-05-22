@@ -1,3 +1,32 @@
+/*!
+ *****************************************************************
+ * \file
+ *
+ * \note
+ *   Copyright (c) 2017 \n
+ *   Fraunhofer Institute for Manufacturing Engineering
+ *   and Automation (IPA) \n\n
+ *
+ *   All rightes reserved. \n\n
+ *
+ *****************************************************************
+ *
+ * \note
+ *   Repository name: evaluation_tools
+ * \note
+ *   ROS package name: ipa_map_comparison
+ *
+ * \author
+ *   Author: Philipp Schnattinger
+ * \author
+ *   Supervised by: Stefan Doerr
+ *
+ * \date Date of creation: 07.02.2017
+ *
+ * \brief
+ *   ipa map comparison class
+ *
+ *****************************************************************/
 #ifndef MAP_COMPARISON_NODE_H
 #define MAP_COMPARISON_NODE_H
 
