@@ -1,4 +1,0 @@
-occ_score: 0.705633
-free_score: 0.705633
-false_occ: 0.00834491
-false_free: 0.524614
